@@ -284,7 +284,7 @@ def get_rocm_version(run_lambda):
 
 
 def get_vllm_version():
-    from vllm import __version__, __version_tuple__
+    from vllm.version import __version__, __version_tuple__
 
     if __version__ == "dev":
         return "N/A (dev)"

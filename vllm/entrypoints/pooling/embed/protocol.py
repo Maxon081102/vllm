@@ -8,7 +8,7 @@ from pydantic import (
     model_validator,
 )
 
-from vllm import PoolingParams
+from vllm.pooling_params import PoolingParams
 from vllm.entrypoints.chat_utils import ChatCompletionMessageParam
 from vllm.entrypoints.openai.protocol import OpenAIBaseModel, UsageInfo
 from vllm.utils import random_uuid
