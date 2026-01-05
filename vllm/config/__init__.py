@@ -30,6 +30,7 @@ from vllm.config.scheduler import SchedulerConfig
 from vllm.config.speculative import SpeculativeConfig
 from vllm.config.speech_to_text import SpeechToTextConfig
 from vllm.config.structured_outputs import StructuredOutputsConfig
+from vllm.config.jump_layers import JumpLayersConfig
 from vllm.config.utils import (
     ConfigType,
     SupportsMetricsInfo,
@@ -92,6 +93,8 @@ __all__ = [
     "SpeechToTextConfig",
     # From vllm.config.structured_outputs
     "StructuredOutputsConfig",
+    # From vllm.config.jump_layers
+    "JumpLayersConfig",
     # From vllm.config.profiler
     "ProfilerConfig",
     # From vllm.config.utils

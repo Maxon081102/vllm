@@ -43,6 +43,7 @@ from .profiler import ProfilerConfig
 from .scheduler import SchedulerConfig
 from .speculative import SpeculativeConfig
 from .structured_outputs import StructuredOutputsConfig
+from .jump_layers import JumpLayersConfig
 from .utils import SupportsHash, config
 
 if TYPE_CHECKING:
@@ -227,6 +228,8 @@ class VllmConfig:
     """The configurations for event publishing."""
     ec_transfer_config: ECTransferConfig | None = None
     """The configurations for distributed EC cache transfer."""
+    jump_layers_config: JumpLayersConfig | None = None
+    """The configurations for jump layers (layer skipping via trained jump heads)."""
     # some opaque config, only used to provide additional information
     # for the hash computation, mainly used for testing, debugging or out of
     # tree config registration.

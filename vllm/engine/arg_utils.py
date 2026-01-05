@@ -41,6 +41,7 @@ from vllm.config import (
     DeviceConfig,
     ECTransferConfig,
     EPLBConfig,
+    JumpLayersConfig,
     KVEventsConfig,
     KVTransferConfig,
     LoadConfig,
@@ -539,6 +540,10 @@ class EngineArgs:
     kv_events_config: KVEventsConfig | None = None
 
     ec_transfer_config: ECTransferConfig | None = None
+
+    # Jump layers configuration
+    jump_layers_path: str | None = None
+    jump_layers: str | None = None
 
     generation_config: str = ModelConfig.generation_config
     enable_sleep_mode: bool = ModelConfig.enable_sleep_mode
@@ -1163,6 +1168,27 @@ class EngineArgs:
             "--optimization-level", **vllm_kwargs["optimization_level"]
         )
 
+        # Jump layers arguments
+        jump_layers_group = parser.add_argument_group(
+            title="JumpLayersConfig",
+            description="Configuration for jump layers (layer skipping via trained jump heads).",
+        )
+        jump_layers_group.add_argument(
+            "--jump-layers-path",
+            type=str,
+            default=None,
+            help="Path to directory containing trained jump head checkpoints "
+                 "(e.g., stage0_step100.pt, stage5_step200.pt).",
+        )
+        jump_layers_group.add_argument(
+            "--jump-layers",
+            type=str,
+            default=None,
+            help="Comma-separated list of layer indices where jump heads are applied "
+                 "(e.g., '0,5,10,15,20'). These layers will have jump heads loaded from "
+                 "the checkpoint directory specified by --jump-layers-path.",
+        )
+
         # Other arguments
         parser.add_argument(
             "--disable-log-stats",
@@ -1735,6 +1761,20 @@ class EngineArgs:
             compilation_config.max_cudagraph_capture_size = (
                 self.max_cudagraph_capture_size
             )
+        # Create jump layers config if specified
+        jump_layers_config = None
+        if self.jump_layers_path or self.jump_layers:
+            jump_layers_config = JumpLayersConfig(
+                jump_layers_path=self.jump_layers_path,
+                jump_layers=self.jump_layers,
+            )
+            if jump_layers_config.is_enabled:
+                logger.info(
+                    "Jump layers enabled: path=%s, layers=%s",
+                    self.jump_layers_path,
+                    jump_layers_config.jump_layer_indices,
+                )
+
         config = VllmConfig(
             model_config=model_config,
             cache_config=cache_config,
@@ -1751,6 +1791,7 @@ class EngineArgs:
             kv_transfer_config=self.kv_transfer_config,
             kv_events_config=self.kv_events_config,
             ec_transfer_config=self.ec_transfer_config,
+            jump_layers_config=jump_layers_config,
             profiler_config=self.profiler_config,
             additional_config=self.additional_config,
             optimization_level=self.optimization_level,
