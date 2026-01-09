@@ -1000,6 +1000,34 @@ class _ModelRegistry:
         if not architectures:
             raise ValueError("No model architectures are specified")
 
+        # Auto-switch to jump layers variant if jump_layers_config is enabled
+        # This allows using --jump-layers-* flags with standard Qwen3 models
+        jump_layers_map = {
+            "Qwen3ForCausalLM": "Qwen3ForCausalLMWithJump",
+        }
+        # Check if jump layers are enabled via vllm_config
+        # We need to access this through a global context
+        try:
+            from vllm.config import get_current_vllm_config
+            vllm_config = get_current_vllm_config()
+            jump_config = getattr(vllm_config, 'jump_layers_config', None)
+            if jump_config is not None and jump_config.is_enabled:
+                new_archs = []
+                for arch in architectures:
+                    if arch in jump_layers_map:
+                        logger.info(
+                            "Auto-switching architecture from %s to %s "
+                            "because jump_layers_config is enabled",
+                            arch, jump_layers_map[arch]
+                        )
+                        new_archs.append(jump_layers_map[arch])
+                    else:
+                        new_archs.append(arch)
+                architectures = new_archs
+        except Exception:
+            # If we can't access vllm_config, just proceed without auto-switching
+            pass
+
         # Require transformers impl
         if model_config.model_impl == "transformers":
             arch = self._try_resolve_transformers(architectures[0], model_config)
